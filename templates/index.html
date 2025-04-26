@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Locker Share</title>
+  </head>
+  <body>
+    <div>
+      <p>Hello paragraph</p>
+      <p>ANother</p>
+      <ul>
+        <li>what!!</li>
+        <li>Another list item</li>
+      </ul>
+    </div>
+    <form method="POST" action="search-item">
+      <select>
+        <option>Location</option>
+        <option>Item</option>
+      </select>
+      <input type="search" />
+      <input type="submit" />
+    </form>
+
+    <form method="POST" action="/submit-item">
+      <label
+        >Name of Item:
+        <input type="text" placeholder="Name" />
+      </label>
+      <label
+        >Image of Item:
+        <input type="file" />
+      </label>
+      <input type="submit" />
+    </form>
+  </body>
+</html>
