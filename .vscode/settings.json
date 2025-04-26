@@ -1,0 +1,14 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "Locker DB",
+      "accessMode": "Read Only",
+      "previewLimit": 50,
+      "driver": "DuckDB",
+      "database": "locker.duckdb",
+      "databaseFilePath": "locker.duckdb"
+    }
+  ],
+  "sqltools.useNodeRuntime": true,
+  "python.pythonPath": "c:\\Users\\kazum\\vs projects\\locker-proj\\.venv\\Scripts\\python.exe"
+}

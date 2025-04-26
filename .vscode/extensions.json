@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "cn00.sqltools-duckdb",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
