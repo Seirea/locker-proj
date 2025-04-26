@@ -1,0 +1,13 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "Locker DB",
+      "accessMode": "Read Only",
+      "previewLimit": 50,
+      "driver": "DuckDB",
+      "database": "locker.duckdb",
+      "databaseFilePath": "locker.duckdb"
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}
