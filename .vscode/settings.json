@@ -2,7 +2,7 @@
   "sqltools.connections": [
     {
       "name": "Locker DB",
-      "accessMode": "Read Only",
+      "accessMode": "Read/Write",
       "previewLimit": 50,
       "driver": "DuckDB",
       "database": "locker.duckdb",
