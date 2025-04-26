@@ -6,28 +6,31 @@ app = Flask(__name__)
 
 @app.route("/")
 @app.route("/index")
-def hello_world():
+def front_page():
     return render_template("index.html")
 
-def code_gen():
+@app.route("/lend")
+def submit_page():
+    return render_template("lend.html")
+
+def code_gen(num_digits = 6):
     codeList = 0
-    digits = [i for i in range(10)]
-    buffer = random.randrange(0,10)
-    digits.remove(buffer)
-
-    for i in range(7):
-        codeList *= 10
+    available_digits = [1,2,3,4,5,6,7,8,9,0]
+    
+    for i in range(num_digits):
+        buffer = available_digits.pop(random.randrange(0,9))
+        
         codeList += buffer
+        if (i != num_digits-1):
+            codeList *= 10
 
-        digits.append(buffer)
-        buffer = digits[random.randrange(0,9)]
-        digits.remove(buffer)
+        available_digits.append(buffer)
 
     return codeList
 
 @app.route("/69")
 def meow():
-    return str(code_gen())
+    return int.to_bytes(code_gen(6), 4, "little", signed=False)
 
 @app.post("/submit-item")
 def submit_item():

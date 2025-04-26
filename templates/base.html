@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    {% block head %}
-    <link rel="stylesheet" href="style.css" />
-    <title>{% block title %}{% endblock %} - My Webpage</title>
-    {% endblock %}
-</head>
-<body>
-    <main>{% block content %}{% endblock %}</div>
-    <footer>
-        {% block footer %}
-        {% endblock %}
-    </footer>
-</body>
+    <head>
+        <link href="{{url_for('static', filename='dist/output.css')}}" rel="stylesheet">
+        <title>Seirea Locker</title>
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <div class="navbar-start">
+                <h1>Locker System</h1>
+            </div>
+
+            <div class="navbar-end flex flex-row gap-4">
+                <a class="link" href="/">Borrow</a>
+                <a class="link" href="/lend">Lend</a>
+            </div>
+        </nav>
+        <main>{% block content %}{% endblock %}</div>
+        <!-- <footer>
+            {% block footer %}
+            {% endblock %}
+        </footer> -->
+    </body>
 </html>
