@@ -1,8 +1,11 @@
 import random
+import duckdb
 from flask import Flask, render_template
 from flask import request
 
 app = Flask(__name__)
+
+conn = duckdb.connect("locker.duckdb")
 
 @app.route("/")
 @app.route("/index")
@@ -41,3 +44,11 @@ def check_code():
     cubby_code = request.args.get("cubby_code", type=int)
     
     return "true"
+
+@app.get("/search")
+def search():
+    query = request.args.get("query", type=str)
+    res = conn.sql("")
+
+    return str(res)
+
