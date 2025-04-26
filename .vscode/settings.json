@@ -9,5 +9,6 @@
       "databaseFilePath": "locker.duckdb"
     }
   ],
-  "sqltools.useNodeRuntime": true
+  "sqltools.useNodeRuntime": true,
+  "python.pythonPath": "c:\\Users\\kazum\\vs projects\\locker-proj\\.venv\\Scripts\\python.exe"
 }

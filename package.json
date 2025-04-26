@@ -2,5 +2,11 @@
 	"dependencies": {
 		"@tailwindcss/cli": "^4.1.4",
 		"tailwindcss": "^4.1.4"
+	},
+	"devDependencies": {
+		"daisyui": "^5.0.28"
+	},
+	"scripts": {
+	  "watch:css": "pnpx @tailwindcss/cli -i ./static/src/input.css -o static/dist/output.css --watch"
 	}
 }
