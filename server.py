@@ -1,11 +1,21 @@
 import random
 import duckdb
-from flask import Flask, render_template
-from flask import request
+from flask import Flask, render_template, request, g
 
 app = Flask(__name__)
 
-conn = duckdb.connect("locker.duckdb")
+
+def get_conn():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = duckdb.connect("locker.duckdb")
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
 @app.route("/")
 @app.route("/index")
@@ -43,10 +53,13 @@ def submit_item():
 @app.get("/check-code")
 def check_code():
     code = request.args.get("code", type=int)
-    location_id = request.args.get("location_id", type=int)
-    cubby_code = request.args.get("cubby_code", type=int)
+    #location_id = request.args.get("location_id", type=int)
     
-    return "true"
+    cubby_id = request.args.get("cubby_id", type=int)
+    res = get_conn().execute("SELECT code FROM Item WHERE item_id == $", [cubby_id]).fetchone()
+    if res == None:
+        raise RuntimeError("Could not find cubby");
+    return res.trim() == code.trim()
 
 @app.get("/search")
 def search():
