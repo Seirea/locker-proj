@@ -61,10 +61,43 @@ def check_code():
         raise RuntimeError("Could not find cubby");
     return res.trim() == code.trim()
 
+end_flag = False
+
+def tail(s1, s2):
+    index = 0
+    max_index = min(len(s1), len(s2))
+
+    while(index < max_index and s1[index] == s2[index]):
+        index += 1
+
+    return s1[index:]
+
+def lev_dist(s, target, stop_dist):
+    if stop_dist == 0:
+        return int("inf")
+
+    if s == "" or target == "":
+        end_flag = True
+        return 0
+
+    tail_s = tail(s, target)
+    tail_t = tail(s, target)
+
+    if tail_s == tail_t:
+        return lev_dist(tail_s, tail_t, stop_dist-1)
+    
+    return 1 + min(lev_dist(s, tail_t, stop_dist-1), 
+                    lev_dist(tail_s, target, stop_dist-1), 
+                    lev_dist(tail_s, tail_t, stop_dist-1))
+
+def dist(s, target):
+    return lev_dist(s, target, max(len(s), len(target)) + 1)
+
+duckdb.create_function("dist", dist, [], int)
+
 @app.get("/search")
-def search():
+def searchLocations():
     query = request.args.get("query", type=str)
-    res = conn.sql("")
+    res = conn.sql('''SELECT name, address FROM Location ORDER BY dist(address, query)''')
 
     return str(res)
-
