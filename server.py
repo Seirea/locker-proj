@@ -3,7 +3,7 @@ import duckdb
 import nltk
 from pathlib import Path
 from duckdb.typing import VARCHAR, INTEGER
-from flask import Flask, render_template, request, g, send_file
+from flask import Flask, render_template, request, g, send_file, Response
 from werkzeug.exceptions import RequestEntityTooLarge
 
 # Initialize Flask Application
@@ -111,20 +111,24 @@ def allowed_file(filename):
 def lend_item():
     loc = request.values.get("location", type=int) or 1
     item_name = request.values.get("item-name", type=str)
-    if not item_name:
-        raise RuntimeError("Item name required!")
+    item_description = request.values.get("item-description", type=str)
+    if not item_name or not item_description:
+        raise RuntimeError("Item name and description required!")
+        
     image = request.files.get("image")
 
     #if image and allowed_file(image.filename):
-    
+    print(f"Creating item {item_name} for location {loc}")
 
-    cubby_id = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id == null", [loc]).fetchone()
-
+    cubby_id = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id is NULL", [loc]).fetchone()
     if cubby_id is None:
         raise RuntimeError("Could not find a free cubby in this location");
+    cubby_id = cubby_id[0]
+    print(f"using cubby id: {cubby_id}")
 
-
-    get_conn().sql("INSERT INTO Item VALUES(DEFAULT, $1, )", [cubby_id, item_name, image.stream])
+    generated_item_id = get_conn().execute("INSERT INTO Item VALUES(DEFAULT, $1, $2, $3, $4) RETURNING (item_id)", [item_name, item_description, image.read(), get_fext(image.filename)]).fetchone()[0]
+    print("generated item id:", generated_item_id)
+    res = get_conn().execute("UPDATE cubby SET item_id = $1, code = $2 WHERE cubby_id == $3", [generated_item_id, code_gen(), cubby_id]).fetchall()
 
     return str(res)
 
@@ -132,11 +136,12 @@ def lend_item():
 @app.get("/item-image/<id>")
 def item_img(id: int):
     # Get image from database
-    res = get_conn().execute("SELECT image, image_ext FROM Item WHERE item_id = $1", [id]).fetchone();
+    res = get_conn().execute("SELECT image, image_ext FROM Item WHERE item_id == $1", [id]).fetchone();
     # If exists, send it back to the client
     if data := res:
+        print(f"RET IMAGE: {data}")
         img, ext = data
-        return send_file(img[0], f"image/{ext}")
+        return Response(img, mimetype=f"image/{ext}")
     # Else send an error
     return f"""
     <h1>Image not found</h1>

@@ -8,22 +8,22 @@ CREATE TABLE Location(
 
 CREATE SEQUENCE user_id_seq START 1;
 
-CREATE TABLE User(
-    user_id INTEGER PRIMARY KEY DEFAULT nextval('user_id_seq'),
-    name VARCHAR,
-    phone_number INTEGER
-);
+-- CREATE TABLE User(
+--     user_id INTEGER PRIMARY KEY DEFAULT nextval('user_id_seq'),
+--     name VARCHAR,
+--     phone_number INTEGER
+-- );
 
 CREATE SEQUENCE item_id_seq START 1;
 
 CREATE TABLE Item (
     item_id INTEGER PRIMARY KEY DEFAULT nextval('item_id_seq'),
     item_name VARCHAR,
-    owner_id INTEGER,
+    -- owner_id INTEGER,
     description VARCHAR,
     image VARBINARY,
     image_ext VARCHAR,
-    FOREIGN KEY (owner_id) REFERENCES User (user_id),
+    -- FOREIGN KEY (owner_id) REFERENCES User (user_id),
 );
 
 CREATE SEQUENCE cubby_id_seq START 1;
