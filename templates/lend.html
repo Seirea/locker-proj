@@ -2,14 +2,14 @@
 <h1 class="text-3xl font-bold underline">Lend Item</h1>
 
 <form method="POST" action="/lend-item" class="flex flex-col gap-4">
-  <label for="name">
+  <label for="item-name">
     Name of Item:
-    <input class="input" type="text" placeholder="Name" id="name" />
+    <input class="input" type="text" placeholder="Name" id="item-name" name="item-name" />
   </label>
 
   <label for="image">
     Image
-    <input class="file-input" type="file" id="image" />
+    <input class="file-input" type="file" id="image" name="image" />
   </label>
 
   <input class="btn" type="submit" />

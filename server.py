@@ -1,5 +1,6 @@
 import random
 import duckdb
+import nltk
 from duckdb.typing import VARCHAR, INTEGER
 
 from flask import Flask, render_template, request, g
@@ -58,7 +59,7 @@ def meow():
 
 @app.post("/lend-item")
 def lend_item():
-    loc = request.args.get("location", type=int)
+    loc = request.values.get("location", type=int)
 
     res = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id == null", [loc]).fetchone()
 
@@ -71,10 +72,10 @@ def lend_item():
 
 @app.get("/check-code")
 def check_code():
-    code = request.args.get("code", type=int)
-    #location_id = request.args.get("location_id", type=int)
+    code = request.values.get("code", type=int)
+    #location_id = request.values.get("location_id", type=int)
 
-    cubby_id = request.args.get("cubby_id", type=int)
+    cubby_id = request.values.get("cubby_id", type=int)
     res = get_conn().execute("SELECT code FROM Item WHERE item_id == $", [cubby_id]).fetchone()
     if res == None:
         raise RuntimeError("Could not find cubby");
@@ -111,14 +112,28 @@ def lev_dist(s, target, stop_dist) -> int:
                     lev_dist(tail_s, tail_t, stop_dist-1))
 
 def dist(s: str, target: str) -> int:
-    return lev_dist(s, target, max(len(s), len(target)) + 1)
+    return nltk.edit_distance(s, target)
+    # return lev_dist(s, target, max(len(s), len(target)) + 1)
 
 
-@app.get("/search")
-def searchLocations():
-    query = request.args.get("query", type=str) or ""
-    count = request.args.get("count", type=int) or 5
-    print(query)
-    res = get_conn().execute('SELECT name, address FROM Location ORDER BY dist(address, $1) LIMIT $2', [str(query), count]).fetchall()
+@app.post("/search")
+def search_handler():
+    query_type = request.values.get("type", type=str) or "Location"
+    query = request.values.get("query", type=str) or ""
+    count = request.values.get("count", type=int) or 5
+    match query_type:
+        case "Location":
+            return search_location(query, count);
+        case "Item":
+            return search_item(query, count);
+
+
+def search_location(query, count):
+    res = get_conn().execute('SELECT name, address FROM Location ORDER BY dist(name, $1) LIMIT $2', [str(query), count]).fetchall()
+
+    return str(res)
+
+def search_item(query, count):
+    res = get_conn().execute('SELECT item_id, item_name FROM Item ORDER BY dist(item_name, $1) LIMIT $2', [str(query), count]).fetchall()
 
     return str(res)

@@ -5,10 +5,10 @@
     Borrow Item
   </h1>
 
-  <form method="POST" action="/search-item" class="flex flex-col gap-4">
+  <form method="POST" action="/search" class="flex flex-col gap-4">
     <label>
       Query Type
-      <select class="select">
+      <select name="type" class="select">
         <option>Location</option>
         <option>Item</option>
       </select>
@@ -16,7 +16,7 @@
 
     <label>
       Value
-      <input class="input" type="search" />
+      <input class="input" type="search" name="query" />
     </label>
     
     <input class="btn" type="submit" />
