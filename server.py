@@ -188,9 +188,10 @@ def check_code():
     if real_code is None:
         raise RuntimeError("Could not find cubby");
 
-    # print(f"CHECK CODE REQUEST: {code}, {cubby_id}, ")
+    if real_code[0] == code:
+        return "True", 200
 
-    return real_code == code
+    return "False", 401
 
 end_flag = False
 
