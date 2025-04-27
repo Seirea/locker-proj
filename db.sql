@@ -32,6 +32,7 @@ CREATE TABLE Cubby (
     cubby_id INTEGER PRIMARY KEY DEFAULT nextval('cubby_id_seq'),
     location_id INTEGER,
     item_id INTEGER,
+    code INTEGER,
     FOREIGN KEY (location_id) REFERENCES Location (location_id),
     FOREIGN KEY (item_id) REFERENCES Item(item_id),
 );
