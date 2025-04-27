@@ -1,4 +1,5 @@
 import random
+import threading
 import duckdb
 import nltk
 from pathlib import Path
@@ -12,31 +13,41 @@ app = Flask(__name__)
 # Set max file upload size
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 
+DB_CONN = None
 
 # Lazy DB Connection
 def get_conn():
-    db = getattr(g, '_database', None)
+    global DB_CONN
+    db = DB_CONN
     # If connection is not established currently, create a connection!
-    if db is None:
+    if (db is None):
+        print("Creating DB CONNECTION")
         # Check if file exists, in order to add DB Tables
         exists = Path("./locker.duckdb").exists()
         # Create connection
-        db = g._database = duckdb.connect("locker.duckdb")
+        DB_CONN = duckdb.connect("locker.duckdb")
+        db = DB_CONN
         # Add string distance, for searching
+        # try:
+        #     db.remove_function("dist")
+        # except:
+        #     pass
         db.create_function("dist", dist)
         # Run DB Schema from SQueaL file
         if not exists:
             with open("./db.sql", "r") as f:
                 db.sql(f.read())
+        return db
 
     return db
 
 # close connection whenever application closes
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None: # only if connection exists
-        db.close()
+# @app.teardown_appcontext
+# def close_connection(exception):
+#     print("CLOSING CONNECTION")
+#     db = DB_CONN
+#     if not (db is None): # only if connection exists
+#         db.close()
 
 # Basic error screen for the runtime errors
 @app.errorhandler(RuntimeError)
@@ -128,9 +139,10 @@ def lend_item():
 
     generated_item_id = get_conn().execute("INSERT INTO Item VALUES(DEFAULT, $1, $2, $3, $4) RETURNING (item_id)", [item_name, item_description, image.read(), get_fext(image.filename)]).fetchone()[0]
     print("generated item id:", generated_item_id)
-    res = get_conn().execute("UPDATE cubby SET item_id = $1, code = $2 WHERE cubby_id == $3", [generated_item_id, code_gen(), cubby_id]).fetchall()
+    res = get_conn().execute("UPDATE cubby SET item_id = $1, code = $2 WHERE cubby_id == $3 RETURNING code, cubby_id", [generated_item_id, code_gen(), cubby_id]).fetchone()
+    print("RETURNING:", res)
 
-    return str(res)
+    return render_template("lend_response.html", cubby_id=res[1], cubby_code=res[0])
 
 # Item image endpoint
 @app.get("/item-image/<id>")
@@ -139,9 +151,26 @@ def item_img(id: int):
     res = get_conn().execute("SELECT image, image_ext FROM Item WHERE item_id == $1", [id]).fetchone();
     # If exists, send it back to the client
     if data := res:
-        print(f"RET IMAGE: {data}")
         img, ext = data
         return Response(img, mimetype=f"image/{ext}")
+    # Else send an error
+    return f"""
+    <h1>Image not found</h1>
+    <br />
+    <a href="/">Go back to homepage</a>
+    """, 404
+
+# borrow item
+@app.get("/borrow/<id>")
+def borrow_item(id: int):
+    # Get image from database
+    res = get_conn().execute("SELECT cubby_id, code, item_id FROM Cubby WHERE item_id == $1", [id]).fetchone();
+    # If exists, send it back to the client
+    if data := res:
+        cubby_id, code, item_id = data
+        get_conn().execute("UPDATE cubby SET item_id = NULL WHERE cubby_id == $1", [cubby_id]).fetchone()
+        get_conn().execute("DELETE FROM item WHERE item_id == $1", [id]).fetchone()
+        return render_template("lend_response.html", cubby_id=cubby_id, cubby_code=code)
     # Else send an error
     return f"""
     <h1>Image not found</h1>
@@ -153,13 +182,15 @@ def item_img(id: int):
 def check_code():
     code = request.values.get("code", type=int)
     #location_id = request.values.get("location_id", type=int)
-
     cubby_id = request.values.get("cubby_id", type=int)
-    res = get_conn().execute("SELECT code FROM Item WHERE item_id == $", [cubby_id]).fetchone()
-    if res is None:
+
+    real_code = get_conn().execute("SELECT code FROM Cubby WHERE cubby_id == $1", [cubby_id]).fetchone()
+    if real_code is None:
         raise RuntimeError("Could not find cubby");
 
-    return res.trim() == code.trim()
+    # print(f"CHECK CODE REQUEST: {code}, {cubby_id}, ")
+
+    return real_code == code
 
 end_flag = False
 
@@ -212,7 +243,12 @@ def search_location(query, count):
 
     return str(res)
 
+
 def search_item(query, count):
     res = get_conn().execute('SELECT item_id, item_name FROM Item ORDER BY dist(item_name, $1) LIMIT $2', [str(query), count]).fetchall()
+    
 
-    return str(res)
+    return render_template("search_results.html", results=res)
+
+if __name__ == "__main__":
+    app.run(debug=True, threaded=True) # Ensure threading is enabled for testing

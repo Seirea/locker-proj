@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul class="list">
+    {% for item in results %}
+    <li class="list-row">
+        <img src="/item-image/{{item[0]}}" width="100">
+        <h1>
+            {{item[1]}} (id={{item[0]}})
+        </h1>
+        <a class="btn" href="/borrow/{{item[0]}}">
+            Confirm Borrow
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
