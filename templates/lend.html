@@ -1,20 +1,17 @@
-{% extends "base.html" %}
-{% block content %}
-  <h1 class="text-3xl font-bold underline">
-    Lend Item
-  </h1>
+{% extends "base.html" %} {% block content %}
+<h1 class="text-3xl font-bold underline">Lend Item</h1>
 
-  <form method="POST" action="/submit-item" class="flex flex-col gap-4">
-    <label>
-      Name of Item:
-      <input class="input" type="text" placeholder="Name" />
-    </label>
+<form method="POST" action="/lend-item" class="flex flex-col gap-4">
+  <label for="name">
+    Name of Item:
+    <input class="input" type="text" placeholder="Name" id="name" />
+  </label>
 
-    <label>
-      Image
-      <input class="file-input" type="file" />
-    </label>
+  <label for="image">
+    Image
+    <input class="file-input" type="file" id="image" />
+  </label>
 
-    <input class="btn" type="submit" />
-  </form>
+  <input class="btn" type="submit" />
+</form>
 {% endblock %}

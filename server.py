@@ -26,6 +26,28 @@ def front_page():
 def submit_page():
     return render_template("lend.html")
 
+
+@app.route("/admin-get-locations")
+def get_locations():
+    res = get_conn().execute("SELECT * FROM Location").fetchall()
+    return str(res)
+
+
+@app.route("/admin-get-cubbies")
+def get_cubbies():
+    res = get_conn().execute("SELECT * FROM Cubby").fetchall()
+    return str(res)
+
+@app.route("/admin-create-location")
+def create_location():
+    res = get_conn().execute("INSERT INTO Location VALUES (?, ?, ?)", [1,"Community Park", "12345 Test Street"]).fetchall()
+    return str(res)
+
+@app.route("/admin-create-cubby")
+def create_cubby():
+    res = get_conn().execute("INSERT INTO")
+    return
+
 def code_gen(num_digits = 6):
     codeList = 0
     available_digits = [1,2,3,4,5,6,7,8,9,0]
@@ -45,10 +67,18 @@ def code_gen(num_digits = 6):
 def meow():
     return int.to_bytes(code_gen(6), 4, "little", signed=False)
 
-@app.post("/submit-item")
-def submit_item():
-    print(request.form)
-    return "meow"
+@app.post("/lend-item")
+def lend_item():
+    loc = request.args.get("location", type=int)
+
+    res = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id == null", [loc]).fetchone()
+
+    if (res == None):
+        raise RuntimeError("Could not find a free cubby in this location");
+
+    # get_conn().execute("")
+
+    return str(res)
 
 @app.get("/check-code")
 def check_code():
