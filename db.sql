@@ -1,17 +1,23 @@
+CREATE SEQUENCE location_id_seq START 1;
+
 CREATE TABLE Location(
-    location_id INTEGER PRIMARY KEY,
+    location_id INTEGER PRIMARY KEY DEFAULT nextval('location_id_seq'),
     name VARCHAR,
     address VARCHAR
 );
 
+CREATE SEQUENCE user_id_seq START 1;
+
 CREATE TABLE User(
-    user_id INTEGER PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY DEFAULT nextval('user_id_seq'),
     name VARCHAR,
     phone_number INTEGER
 );
 
+CREATE SEQUENCE item_id_seq START 1;
+
 CREATE TABLE Item (
-    item_id INTEGER PRIMARY KEY,
+    item_id INTEGER PRIMARY KEY DEFAULT nextval('item_id_seq'),
     item_name VARCHAR,
     owner_id INTEGER,
     description VARCHAR,
@@ -19,8 +25,10 @@ CREATE TABLE Item (
     FOREIGN KEY (owner_id) REFERENCES User (user_id),
 );
 
+CREATE SEQUENCE cubby_id_seq START 1;
+
 CREATE TABLE Cubby (
-    cubby_id INTEGER PRIMARY KEY,
+    cubby_id INTEGER PRIMARY KEY DEFAULT nextval('cubby_id_seq'),
     location_id INTEGER,
     item_id INTEGER,
     FOREIGN KEY (location_id) REFERENCES Location (location_id),
