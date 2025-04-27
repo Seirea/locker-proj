@@ -34,7 +34,7 @@ def submit_page():
 def get_locations():
     cmd = request.data.decode()
     print("EXECUTING:", cmd)
-    res = get_conn().execute(cmd).fetchall()
+    res = get_conn().sql(cmd)
     return str(res)
 
 def code_gen(num_digits = 6):
