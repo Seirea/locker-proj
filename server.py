@@ -170,32 +170,54 @@ def borrow_item(id: int):
         cubby_id, code, item_id = data
         get_conn().execute("UPDATE cubby SET item_id = NULL WHERE cubby_id == $1", [cubby_id]).fetchone()
         get_conn().execute("DELETE FROM item WHERE item_id == $1", [id]).fetchone()
+        # Return successful borrow template with cubby details
         return render_template("lend_response.html", cubby_id=cubby_id, cubby_code=code)
-    # Else send an error
+    # Return 404 error if item not found
     return f"""
     <h1>Image not found</h1>
     <br />
     <a href="/">Go back to homepage</a>
     """, 404
 
-@app.get("/check-code")
+# Endpoint to verify if entered code matches cubby code
+# Returns HTTP 200 if code matches, 401 if invalid
+@app.get("/check-code") 
 def check_code():
+    # Extract the entered security code from request parameters
+    # Converts to integer type automatically
     code = request.values.get("code", type=int)
+    
+    # Location ID param currently disabled but kept for future use
     #location_id = request.values.get("location_id", type=int)
+    
+    # Get the cubby ID to check against from request parameters
+    # Converts to integer type automatically
     cubby_id = request.values.get("cubby_id", type=int)
 
+    # Query database to get the actual stored security code for this cubby
+    # Using parameterized query for security
     real_code = get_conn().execute("SELECT code FROM Cubby WHERE cubby_id == $1", [cubby_id]).fetchone()
+    
+    # If no cubby found with this ID, raise an error
     if real_code is None:
         raise RuntimeError("Could not find cubby");
 
+    # Compare entered code with stored code
+    # real_code[0] accesses first column of result (the code)
     if real_code[0] == code:
+        # Return "True" with HTTP 200 OK status if codes match
         return "True", 200
 
+    # Return "False" with HTTP 401 Unauthorized status if codes don't match
     return "False", 401
 
+# Global flag used to control recursive string distance calculation
+# Can be set to True to terminate deep recursion
 end_flag = False
 
+# Helper function for Levenshtein distance calculation
 def tail(s1, s2):
+    # Find common prefix between two strings
     index = 0
     max_index = min(len(s1), len(s2))
 

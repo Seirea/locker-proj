@@ -1,24 +1,20 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
+<h1 class="text-3xl font-bold underline">Search For Items to Borrow</h1>
 
-{% block content %}
-  <h1 class="text-3xl font-bold underline">
-    Borrow Item
-  </h1>
+<form method="POST" action="/search" class="flex flex-col gap-4">
+  <label>
+    Query Type
+    <select name="type" class="select">
+      <option>Item</option>
+      <option>Location</option>
+    </select>
+  </label>
 
-  <form method="POST" action="/search" class="flex flex-col gap-4">
-    <label>
-      Query Type
-      <select name="type" class="select">
-        <option>Location</option>
-        <option>Item</option>
-      </select>
-    </label>
+  <label>
+    Value
+    <input class="input" type="search" name="query" />
+  </label>
 
-    <label>
-      Value
-      <input class="input" type="search" name="query" />
-    </label>
-    
-    <input class="btn" type="submit" />
-  </form>
+  <input class="btn" type="submit" />
+</form>
 {% endblock %}
