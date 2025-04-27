@@ -1,36 +1,75 @@
 import random
 import duckdb
 import nltk
+from pathlib import Path
 from duckdb.typing import VARCHAR, INTEGER
+from flask import Flask, render_template, request, g, send_file
+from werkzeug.exceptions import RequestEntityTooLarge
 
-from flask import Flask, render_template, request, g
-
+# Initialize Flask Application
 app = Flask(__name__)
 
+# Set max file upload size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 
+
+# Lazy DB Connection
 def get_conn():
     db = getattr(g, '_database', None)
+    # If connection is not established currently, create a connection!
     if db is None:
+        # Check if file exists, in order to add DB Tables
+        exists = Path("./locker.duckdb").exists()
+        # Create connection
         db = g._database = duckdb.connect("locker.duckdb")
+        # Add string distance, for searching
         db.create_function("dist", dist)
+        # Run DB Schema from SQueaL file
+        if not exists:
+            with open("./db.sql", "r") as f:
+                db.sql(f.read())
 
     return db
 
+# close connection whenever application closes
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
-    if db is not None:
+    if db is not None: # only if connection exists
         db.close()
 
+# Basic error screen for the runtime errors
+@app.errorhandler(RuntimeError)
+def handle_bad_request(e):
+    return f"""
+    <h1>An error occured with the server</h1>
+    <code>{e}</code>
+    <br />
+    <a href="/">Go back to homepage</a>
+    """, 500
+
+# Max file size error
+@app.errorhandler(RequestEntityTooLarge)
+def handle_too_big(e):
+    return f"""
+    <h1>The file uploaded was too big! Max 16 MB</h1>
+    <br />
+    <a href="/">Go back to homepage</a>
+    """, 413
+
+
+# render borrowing page
 @app.route("/")
 @app.route("/index")
 def front_page():
     return render_template("index.html")
 
+# render lending page
 @app.route("/lend")
 def submit_page():
     return render_template("lend.html")
 
+# establishes admin console accessible through `$ deno run --allow-net sql_client.js`
 @app.route("/admin-execute-sql", methods=["POST"])
 def get_locations():
     cmd = request.data.decode()
@@ -38,13 +77,14 @@ def get_locations():
     res = get_conn().sql(cmd)
     return str(res)
 
+# Generate combination code for unlocking
 def code_gen(num_digits = 6):
     code_list = 0
     available_digits = [1,2,3,4,5,6,7,8,9,0]
-    
+
     for i in range(num_digits):
         buffer = available_digits.pop(random.randrange(0,9))
-        
+
         code_list += buffer
         if (i != num_digits-1):
             code_list *= 10
@@ -57,18 +97,52 @@ def code_gen(num_digits = 6):
 def meow():
     return int.to_bytes(code_gen(6), 4, "little", signed=False)
 
+# Checks if uploaded image IS an image
+ALLOWED_EXTENSIONS=["png", "jpg", "jpeg", "jxl", "gif", "webp", "avif", "heif"]
+def get_fext(filename):
+    return filename.rsplit('.', 1)[1].lower()
+
+def allowed_file(filename):
+    return '.' in filename and get_fext(filename) in ALLOWED_EXTENSIONS
+
+
+# Form action for submitting a lend
 @app.post("/lend-item")
 def lend_item():
-    loc = request.values.get("location", type=int)
+    loc = request.values.get("location", type=int) or 1
+    item_name = request.values.get("item-name", type=str)
+    if not item_name:
+        raise RuntimeError("Item name required!")
+    image = request.files.get("image")
 
-    res = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id == null", [loc]).fetchone()
+    #if image and allowed_file(image.filename):
+    
 
-    if (res == None):
+    cubby_id = get_conn().execute("SELECT cubby_id FROM Cubby WHERE location_id == $1 AND item_id == null", [loc]).fetchone()
+
+    if cubby_id is None:
         raise RuntimeError("Could not find a free cubby in this location");
 
-    # get_conn().execute("")
+
+    get_conn().sql("INSERT INTO Item VALUES(DEFAULT, $1, )", [cubby_id, item_name, image.stream])
 
     return str(res)
+
+# Item image endpoint
+@app.get("/item-image/<id>")
+def item_img(id: int):
+    # Get image from database
+    res = get_conn().execute("SELECT image, image_ext FROM Item WHERE item_id = $1", [id]).fetchone();
+    # If exists, send it back to the client
+    if data := res:
+        img, ext = data
+        return send_file(img[0], f"image/{ext}")
+    # Else send an error
+    return f"""
+    <h1>Image not found</h1>
+    <br />
+    <a href="/">Go back to homepage</a>
+    """, 404
 
 @app.get("/check-code")
 def check_code():
@@ -77,7 +151,7 @@ def check_code():
 
     cubby_id = request.values.get("cubby_id", type=int)
     res = get_conn().execute("SELECT code FROM Item WHERE item_id == $", [cubby_id]).fetchone()
-    if res == None:
+    if res is None:
         raise RuntimeError("Could not find cubby");
 
     return res.trim() == code.trim()

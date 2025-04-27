@@ -1,10 +1,22 @@
 {% extends "base.html" %} {% block content %}
 <h1 class="text-3xl font-bold underline">Lend Item</h1>
 
-<form method="POST" action="/lend-item" class="flex flex-col gap-4">
+<form
+  method="POST"
+  action="/lend-item"
+  enctype="multipart/form-data"
+  class="flex flex-col gap-4"
+>
   <label for="item-name">
     Name of Item:
-    <input class="input" type="text" placeholder="Name" id="item-name" name="item-name" />
+    <input
+      class="input"
+      type="text"
+      placeholder="Name"
+      id="item-name"
+      name="item-name"
+      required
+    />
   </label>
 
   <label for="image">

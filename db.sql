@@ -22,6 +22,7 @@ CREATE TABLE Item (
     owner_id INTEGER,
     description VARCHAR,
     image VARBINARY,
+    image_ext VARCHAR,
     FOREIGN KEY (owner_id) REFERENCES User (user_id),
 );
 

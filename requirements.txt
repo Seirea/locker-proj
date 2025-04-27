@@ -1,3 +1,4 @@
 duckdb
 Flask
 numpy
+nltk
