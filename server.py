@@ -26,27 +26,12 @@ def front_page():
 def submit_page():
     return render_template("lend.html")
 
-
-@app.route("/admin-get-locations")
+@app.route("/admin-execute-sql", methods=["POST"])
 def get_locations():
-    res = get_conn().execute("SELECT * FROM Location").fetchall()
+    cmd = request.data.decode()
+    print("EXECUTING:", cmd)
+    res = get_conn().execute(cmd).fetchall()
     return str(res)
-
-
-@app.route("/admin-get-cubbies")
-def get_cubbies():
-    res = get_conn().execute("SELECT * FROM Cubby").fetchall()
-    return str(res)
-
-@app.route("/admin-create-location")
-def create_location():
-    res = get_conn().execute("INSERT INTO Location VALUES (?, ?, ?)", [1,"Community Park", "12345 Test Street"]).fetchall()
-    return str(res)
-
-@app.route("/admin-create-cubby")
-def create_cubby():
-    res = get_conn().execute("INSERT INTO")
-    return
 
 def code_gen(num_digits = 6):
     codeList = 0
@@ -89,6 +74,7 @@ def check_code():
     res = get_conn().execute("SELECT code FROM Item WHERE item_id == $", [cubby_id]).fetchone()
     if res == None:
         raise RuntimeError("Could not find cubby");
+
     return res.trim() == code.trim()
 
 end_flag = False
@@ -102,7 +88,7 @@ def tail(s1, s2):
 
     return s1[index:]
 
-def lev_dist(s, target, stop_dist):
+def lev_dist(s, target, stop_dist) -> int:
     if stop_dist == 0:
         return int("inf")
 
@@ -120,10 +106,10 @@ def lev_dist(s, target, stop_dist):
                     lev_dist(tail_s, target, stop_dist-1), 
                     lev_dist(tail_s, tail_t, stop_dist-1))
 
-def dist(s, target):
+def dist(s, target) -> int:
     return lev_dist(s, target, max(len(s), len(target)) + 1)
 
-duckdb.create_function("dist", dist, [], int)
+# duckdb.create_function("dist", dist, [], return_type=int)
 
 @app.get("/search")
 def searchLocations():
